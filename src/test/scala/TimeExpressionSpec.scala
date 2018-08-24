@@ -26,6 +26,16 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
     everyDayFromToday.isRecurringOn(today.plusYears(50)) should be(true)
   }
 
+  it should "reccur every day with old date" in {
+    val oneDay = 1
+    val today = LocalDate.now
+    val everyDayFromToday = TimeExpression.daily(oneDay, today)
+
+    everyDayFromToday.isRecurringOn(today.minusDays(1)) should be(false)
+    everyDayFromToday.isRecurringOn(today.minusDays(2)) should be(false)
+    everyDayFromToday.isRecurringOn(today.minusDays(50)) should be(false)
+  }
+
   it should "reccur every two days" in {
     val twoDays = 2
     val today = LocalDate.now
@@ -75,6 +85,7 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012) should be(true)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(1)) should be(true)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(2)) should be(true)
+    everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(2).plusDays(10)) should be(false)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(3)) should be(true)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(4)) should be(true)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(500)) should be(true)
@@ -84,6 +95,34 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(firstDayOfJanuary2012.plusMonths(3)) should be(false)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(firstDayOfJanuary2012.plusMonths(500)) should be(false)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(firstDayOfJanuary2012.plusMonths(15).plusDays(1)) should be(true)
+  }
+
+  it should "reccur every month the fourth day with diferent from date" in {
+    val oneMonth = 1
+    val secondDayOfMonth = 4
+    val januaryOf2018 = YearMonth.of(2018, 1)
+    val everyMonthTheFourDayFromJanuary2012 = TimeExpression.monthlyEvery(oneMonth, secondDayOfMonth, januaryOf2018)
+
+    val secondDayOfJanuary2012 = LocalDate.of(2018, 1, 15)
+    everyMonthTheFourDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012) should be(false)
+    everyMonthTheFourDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(1)) should be(false)
+    everyMonthTheFourDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(2)) should be(false)
+    everyMonthTheFourDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusDays(20)) should be(true)
+    everyMonthTheFourDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusDays(20).plusMonths(1)) should be(true)
+  }
+
+  it should "reccur every month with old date" in {
+    val oneMonth = 1
+    val secondDayOfMonth = 2
+    val januaryOf2012 = YearMonth.of(2012, 1)
+    val everyMonthTheSecondDayFromJanuary2012 = TimeExpression.monthlyEvery(oneMonth, secondDayOfMonth, januaryOf2012)
+
+    val secondDayOfJanuary2012 = LocalDate.of(2011, 1, 2)
+    everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012) should be(false)
+    everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(1)) should be(false)
+    everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(2)) should be(false)
+    everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusYears(1)) should be(true)
+    everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(11)) should be(false)
   }
 
   it should "reccur every two months the second day" in {
@@ -124,33 +163,33 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
     everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(12)) should be(false)
     everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(13)) should be(true)
   }
-  //
-  //  it should "reccur every month the last friday" in {
-  //    val oneMonth = 1
-  //    val lastWeekOfMonth = 5
-  //    val januaryOf2012 = YearMonth.of(2012, 1)
-  //    val everyMonthTheFirstFridayFromJanuary2012 = TimeExpression.monthlyEvery(oneMonth, DayOfWeek.FRIDAY, lastWeekOfMonth, januaryOf2012)
-  //
-  //    val firstFridayOfJanuary2012 = LocalDate.of(2012, 1, 6)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(1)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(2)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(3)) should be(true)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(4)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(5)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(6)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(7))  should be(true)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(8)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(9)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(10)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(11)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(12)) should be(true)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(13)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(14)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(15)) should be(false)
-  //    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(16)) should be(true)
-  //  }
-  //
+
+  it should "reccur every month the last friday" in {
+    val oneMonth = 1
+    val lastWeekOfMonth = 5
+    val januaryOf2012 = YearMonth.of(2012, 1)
+    val everyMonthTheFirstFridayFromJanuary2012 = TimeExpression.monthlyEvery(oneMonth, DayOfWeek.FRIDAY, lastWeekOfMonth, januaryOf2012)
+
+    val firstFridayOfJanuary2012 = LocalDate.of(2012, 1, 6)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(1)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(2)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(3)) should be(true)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(4)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(5)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(6)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(7)) should be(true)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(8)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(9)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(10)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(11)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(12)) should be(true)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(13)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(14)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(15)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(16)) should be(true)
+  }
+
   it should "reccur every year the last friday" in {
     val oneYear = 1
     val augustTheEight = MonthDay.of(8, 8)

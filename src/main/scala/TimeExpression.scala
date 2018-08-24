@@ -1,5 +1,5 @@
 import java.time._
-import java.time.temporal.{TemporalAdjuster, TemporalAdjusters}
+import java.time.temporal.TemporalAdjusters
 
 object TimeExpression {
 
@@ -14,59 +14,54 @@ object TimeExpression {
   }
 
   def daily(amountOfDay: Int, from: LocalDate): TimeExpression = {
-    TimeExpressionImpl(from, amountOfDay = amountOfDay)
+    TimeExpressionDaily(from, amountOfDay)
   }
 
   def monthlyEvery(amountMonth: Int, dayOfMonth: Int, from: YearMonth): TimeExpression = {
     val fromDate: LocalDate = LocalDate.of(from.getYear, from.getMonthValue, dayOfMonth)
-    TimeExpressionImpl(fromDate, dayOfMonth, amountMonth)
+    TimeExpressionMonth(fromDate, dayOfMonth, amountMonth)
   }
 
   def monthlyEvery(amountMonth: Int, dayOfWeek: DayOfWeek, weekOfMonth: Int, from: YearMonth): TimeExpression = {
-    val date = LocalDate.of(from.getYear, from.getMonthValue, 1)
-    val teste = date.`with`(TemporalAdjusters.dayOfWeekInMonth(weekOfMonth, DayOfWeek.FRIDAY))
     val fromDate: LocalDate = LocalDate.of(from.getYear, from.getMonthValue, dayOfWeek.getValue)
-    TimeExpressionImpl(fromDate, amountOfMonth = amountMonth)
+    TimeExpressionMonthWithDayOfWeek(fromDate, dayOfWeek, amountMonth, weekOfMonth)
   }
 
   def yearlyEvery(amountOfYears: Int, day: MonthDay, fromYear: Int): TimeExpression = {
     val fromDate: LocalDate = LocalDate.of(fromYear, day.getMonthValue, day.getDayOfMonth)
-    TimeExpressionImpl(fromDate, amountOfYears = amountOfYears)
+    TimeExpressionYear(fromDate, amountOfYears)
   }
 
-  def yearIsRecurring(date: LocalDate, from: LocalDate, amountOfYears: Int): Boolean = (from.getYear - date.getYear) % amountOfYears == 0
-
-  def monthIsRecurring(date: LocalDate, from: LocalDate, amountOfMonth: Int): Boolean = (date.getMonthValue - from.getMonthValue) % amountOfMonth == 0 && date.getDayOfMonth.equals(from.getDayOfMonth)
-
-  def weekOfMonthIsRecurring(date: LocalDate, from: LocalDate, amountOfMonth: Int, weekOfMonth: Int, dayOfWeek: DayOfWeek): Boolean = {
-    (date.getMonthValue - from.getMonthValue) % amountOfMonth == 0 && date.getDayOfWeek.equals(dayOfWeek)
-  }
-
-  def dayIsRecurring(date: LocalDate, from: LocalDate, amountOfDay: Int): Boolean = Duration.between(from.atStartOfDay, date.atStartOfDay()).toDays % amountOfDay == 0
+  def dateIsAfterOrEquals(from: LocalDate, date: LocalDate): Boolean = !from.isAfter(date) || from.isEqual(date)
 }
 
-case class TimeExpressionImpl(from: LocalDate, amountOfDay: Int = 0, amountOfMonth: Int = 0, amountOfYears: Int = 0, weekOfMonth: Int = 0, dayOfWeek: DayOfWeek = DayOfWeek.MONDAY) extends TimeExpression {
+case class TimeExpressionImpl(from: LocalDate) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = TimeExpression.dateIsAfterOrEquals(from, date)
+}
 
+case class TimeExpressionMonth(from: LocalDate, dayOfMonth: Int, amountOfMonth: Int) extends TimeExpression {
   override def isRecurringOn(date: LocalDate): Boolean = {
-    //    date match {
-    //      case dateMatch if dateMatch.isBefore(from) => false
-    //      case dateMatch if date.isEqual(from) => true
-    //      case dateMatch if amountOfYears != 0 => TimeExpression.yearIsRecurring(dateMatch, from, amountOfYears)
-    //      case dateMatch if amountOfMonth != 0 => TimeExpression.monthIsRecurring(dateMatch, from, amountOfMonth)
-    //      case dateMatch if amountOfDay != 0 => TimeExpression.dayIsRecurring(dateMatch, from, amountOfDay)
-    //      case _ => false
-    //    }
-
-    if (from.isAfter(date)) false
-    else if (from.isEqual(date)) true
-    else {
-      if (amountOfYears != 0) TimeExpression.yearIsRecurring(date, from, amountOfDay)
-      else if (weekOfMonth != 0) TimeExpression.weekOfMonthIsRecurring(date, from, amountOfMonth, weekOfMonth, dayOfWeek)
-      else if (amountOfMonth != 0) TimeExpression.monthIsRecurring(date, from, amountOfMonth)
-      else if (amountOfDay != 0) TimeExpression.dayIsRecurring(date, from, amountOfYears)
-      else false
-    }
+    TimeExpression.dateIsAfterOrEquals(from, date) && (date.getMonthValue - from.getMonthValue) % amountOfMonth == 0 && date.getDayOfMonth.equals(dayOfMonth)
   }
+}
+
+case class TimeExpressionMonthWithDayOfWeek(from: LocalDate, dayOfWeek: DayOfWeek, amountOfMonth: Int, weekOfMonth: Int) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = {
+    val dateWithFirtsDay = date.`with`(TemporalAdjusters.firstDayOfMonth())
+    val dateWithWeek = weekOfMonth match {
+      case 5 => dateWithFirtsDay.`with`(TemporalAdjusters.lastInMonth(dayOfWeek))
+      case _ => dateWithFirtsDay.`with`(TemporalAdjusters.dayOfWeekInMonth(weekOfMonth, dayOfWeek))
+    }
+    TimeExpression.dateIsAfterOrEquals(from, date) && (date.getMonthValue - from.getMonthValue) % amountOfMonth == 0 && date.equals(dateWithWeek)
+  }
+}
+
+case class TimeExpressionYear(from: LocalDate, amountOfYears: Int) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = TimeExpression.dateIsAfterOrEquals(from, date) && (from.getYear - date.getYear) % amountOfYears == 0
+}
+
+case class TimeExpressionDaily(from: LocalDate, amountOfDay: Int) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = TimeExpression.dateIsAfterOrEquals(from, date) && Duration.between(from.atStartOfDay, date.atStartOfDay()).toDays % amountOfDay == 0
 }
 
 trait TimeExpression {
