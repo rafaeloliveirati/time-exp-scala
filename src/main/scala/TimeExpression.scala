@@ -32,38 +32,43 @@ object TimeExpression {
     TimeExpressionYear(fromDate, amountOfYears)
   }
 
-  def dateIsAfterOrEquals(from: LocalDate, date: LocalDate): Boolean = !from.isAfter(date) || from.isEqual(date)
-}
+  def isDateAfterOrEquals(from: LocalDate, date: LocalDate): Boolean = date.isAfter(from) || from.isEqual(date)
 
-case class TimeExpressionImpl(from: LocalDate) extends TimeExpression {
-  override def isRecurringOn(date: LocalDate): Boolean = TimeExpression.dateIsAfterOrEquals(from, date)
-}
-
-case class TimeExpressionMonth(from: LocalDate, dayOfMonth: Int, amountOfMonth: Int) extends TimeExpression {
-  override def isRecurringOn(date: LocalDate): Boolean = {
-    TimeExpression.dateIsAfterOrEquals(from, date) && (date.getMonthValue - from.getMonthValue) % amountOfMonth == 0 && date.getDayOfMonth.equals(dayOfMonth)
-  }
-}
-
-case class TimeExpressionMonthWithDayOfWeek(from: LocalDate, dayOfWeek: DayOfWeek, amountOfMonth: Int, weekOfMonth: Int) extends TimeExpression {
-  override def isRecurringOn(date: LocalDate): Boolean = {
-    val dateWithFirtsDay = date.`with`(TemporalAdjusters.firstDayOfMonth())
-    val dateWithWeek = weekOfMonth match {
-      case 5 => dateWithFirtsDay.`with`(TemporalAdjusters.lastInMonth(dayOfWeek))
-      case _ => dateWithFirtsDay.`with`(TemporalAdjusters.dayOfWeekInMonth(weekOfMonth, dayOfWeek))
-    }
-    TimeExpression.dateIsAfterOrEquals(from, date) && (date.getMonthValue - from.getMonthValue) % amountOfMonth == 0 && date.equals(dateWithWeek)
-  }
-}
-
-case class TimeExpressionYear(from: LocalDate, amountOfYears: Int) extends TimeExpression {
-  override def isRecurringOn(date: LocalDate): Boolean = TimeExpression.dateIsAfterOrEquals(from, date) && (from.getYear - date.getYear) % amountOfYears == 0
-}
-
-case class TimeExpressionDaily(from: LocalDate, amountOfDay: Int) extends TimeExpression {
-  override def isRecurringOn(date: LocalDate): Boolean = TimeExpression.dateIsAfterOrEquals(from, date) && Duration.between(from.atStartOfDay, date.atStartOfDay()).toDays % amountOfDay == 0
+  def isRecurrentMod(from: Int, date: Int, amount: Int): Boolean = ((date - from) % amount).equals(0)
 }
 
 trait TimeExpression {
   def isRecurringOn(localDate: LocalDate): Boolean
+}
+
+case class TimeExpressionImpl(from: LocalDate) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = TimeExpression.isDateAfterOrEquals(from, date)
+}
+
+case class TimeExpressionDaily(from: LocalDate, amountOfDay: Int) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = {
+    val diffBetweenDays = Duration.between(from.atStartOfDay, date.atStartOfDay()).toDays.toInt
+    TimeExpression.isDateAfterOrEquals(from, date) && (diffBetweenDays % amountOfDay).equals(0)
+  }
+}
+
+case class TimeExpressionMonth(from: LocalDate, dayOfMonth: Int, amountOfMonth: Int) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = {
+    TimeExpression.isDateAfterOrEquals(from, date) && TimeExpression.isRecurrentMod(from.getMonthValue, date.getMonthValue, amountOfMonth) && date.getDayOfMonth.equals(dayOfMonth)
+  }
+}
+
+case class TimeExpressionYear(from: LocalDate, amountOfYears: Int) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = TimeExpression.isDateAfterOrEquals(from, date) && TimeExpression.isRecurrentMod(from.getYear, date.getYear, amountOfYears)
+}
+
+case class TimeExpressionMonthWithDayOfWeek(from: LocalDate, dayOfWeek: DayOfWeek, amountOfMonth: Int, weekOfMonth: Int) extends TimeExpression {
+  override def isRecurringOn(date: LocalDate): Boolean = {
+    val firstDayOfMonth = date.`with`(TemporalAdjusters.firstDayOfMonth())
+    val dateWithWeek = weekOfMonth match {
+      case 5 => firstDayOfMonth.`with`(TemporalAdjusters.lastInMonth(dayOfWeek))
+      case _ => firstDayOfMonth.`with`(TemporalAdjusters.dayOfWeekInMonth(weekOfMonth, dayOfWeek))
+    }
+    TimeExpression.isDateAfterOrEquals(from, date) && TimeExpression.isRecurrentMod(from.getMonthValue, date.getMonthValue, amountOfMonth) && date.equals(dateWithWeek)
+  }
 }
