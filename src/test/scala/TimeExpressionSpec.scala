@@ -17,6 +17,7 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
     val everyDayFromToday = TimeExpression.daily(oneDay, today)
 
     everyDayFromToday.isRecurringOn(today) should be(true)
+    everyDayFromToday.isRecurringOn(today.minusDays(10)) should be(false)
     everyDayFromToday.isRecurringOn(today.plusDays(1)) should be(true)
     everyDayFromToday.isRecurringOn(today.plusDays(2)) should be(true)
     everyDayFromToday.isRecurringOn(today.plusDays(3)) should be(true)
@@ -83,6 +84,7 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
 
     val secondDayOfJanuary2012 = LocalDate.of(2012, 1, 2)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012) should be(true)
+    everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.minusDays(10)) should be(false)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(1)) should be(true)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(2)) should be(true)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(2).plusDays(10)) should be(false)
@@ -97,7 +99,7 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(firstDayOfJanuary2012.plusMonths(15).plusDays(1)) should be(true)
   }
 
-  it should "reccur every month the fourth day with diferent from date" in {
+  it should "reccur every month the fourth day with different from date" in {
     val oneMonth = 1
     val secondDayOfMonth = 4
     val januaryOf2018 = YearMonth.of(2018, 1)
@@ -133,6 +135,7 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
 
     val secondDayOfJanuary2012 = LocalDate.of(2012, 1, 2)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012) should be(true)
+    everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.minusMonths(2)) should be(false)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(1)) should be(false)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(2)) should be(true)
     everyMonthTheSecondDayFromJanuary2012.isRecurringOn(secondDayOfJanuary2012.plusMonths(3)) should be(false)
@@ -149,6 +152,7 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
 
     val firstFridayOfJanuary2012 = LocalDate.of(2012, 1, 6)
     everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012) should be(true)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.minusMonths(3)) should be(false)
     everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(1)) should be(false)
     everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(2)) should be(false)
     everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(3)) should be(false)
@@ -190,6 +194,20 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
     everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(16)) should be(true)
   }
 
+  it should "reccur every three month the second tuesday" in {
+    val oneMonth = 3
+    val secondWeekOfMonth = 2
+    val augustTheEight = YearMonth.of(2018, 8)
+    val everyMonthTheFirstFridayFromJanuary2012 = TimeExpression.monthlyEvery(oneMonth, DayOfWeek.TUESDAY, secondWeekOfMonth, augustTheEight)
+
+    val secondTuesdayOfAugust2018 = LocalDate.of(2018, 8, 14)
+    val secondTuesdayOfNovember2018 = LocalDate.of(2018, 11, 13)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(secondTuesdayOfAugust2018) should be(true)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(secondTuesdayOfAugust2018.plusMonths(1)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(secondTuesdayOfAugust2018.plusDays(28)) should be(false)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(secondTuesdayOfNovember2018) should be(true)
+  }
+
   it should "reccur every year the last friday" in {
     val oneYear = 1
     val augustTheEight = MonthDay.of(8, 8)
@@ -197,6 +215,7 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
 
     val firstEightOfAugust = LocalDate.of(2012, 8, 8)
     everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust) should be(true)
+    everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust.minusMonths(2)) should be(false)
     everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust.plusYears(1)) should be(true)
     everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust.plusYears(2)) should be(true)
     everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust.plusYears(3)) should be(true)
@@ -209,6 +228,7 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
 
     val firstEightOfAugust = LocalDate.of(2012, 8, 8)
     everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust) should be(true)
+    everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust.minusMonths(5)) should be(false)
     everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust.plusYears(1)) should be(false)
     everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust.plusYears(20)) should be(false)
     everyAugustTheEightFrom2012.isRecurringOn(firstEightOfAugust.plusYears(30)) should be(true)
