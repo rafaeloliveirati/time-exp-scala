@@ -23,7 +23,7 @@ object TimeExpression {
   }
 
   def monthlyEvery(amountMonth: Int, dayOfWeek: DayOfWeek, weekOfMonth: Int, from: YearMonth): TimeExpression = {
-    val fromDate: LocalDate = LocalDate.of(from.getYear, from.getMonthValue, dayOfWeek.getValue)
+    val fromDate: LocalDate = LocalDate.of(from.getYear, from.getMonthValue, 1)
     TimeExpressionMonthWithDayOfWeek(fromDate, dayOfWeek, amountMonth, weekOfMonth)
   }
 

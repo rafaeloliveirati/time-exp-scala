@@ -168,6 +168,17 @@ class TimeExpressionSpec extends FlatSpec with Matchers {
     everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.plusWeeks(13)) should be(true)
   }
 
+    it should "reccur every month the first friday2" in {
+    val oneMonth = 1
+    val firstWeekOfMonth = 1
+    val novemberOf2018 = YearMonth.of(2018, 11)
+    val everyMonthTheFirstFridayFromJanuary2012 = TimeExpression.monthlyEvery(oneMonth, DayOfWeek.FRIDAY, firstWeekOfMonth, novemberOf2018)
+
+    val firstFridayOfJanuary2012 = LocalDate.of(2018, 11, 2)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012) should be(true)
+    everyMonthTheFirstFridayFromJanuary2012.isRecurringOn(firstFridayOfJanuary2012.minusMonths(3)) should be(false)
+  }
+
   it should "reccur every month the last friday" in {
     val oneMonth = 1
     val lastWeekOfMonth = 5
